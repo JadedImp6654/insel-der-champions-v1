@@ -13,7 +13,7 @@ export class UISystem extends Phaser.Scene {
   }
 
   create() {
-    const u = IS_MOBILE ? 1.12 : Math.max(0.68, Math.min(1, GAME_WIDTH / 2560));
+    const u = IS_MOBILE ? 0.62 : Math.max(0.68, Math.min(1, GAME_WIDTH / 2560));
     const fs = (n) => `${Math.floor(n * u)}px`;
 
     this.dialogBg = this.add.rectangle(20, GAME_HEIGHT - Math.floor(220 * u), GAME_WIDTH - 40, Math.floor(190 * u), 0x06111f, 0.92).setOrigin(0, 0).setStrokeStyle(2, 0x90d7ff);
@@ -21,14 +21,14 @@ export class UISystem extends Phaser.Scene {
     this.questText = this.add.text(20, 20, '', { fontFamily: 'monospace', fontSize: fs(28), color: '#ffed9a' }).setScrollFactor(0);
     this.hintText = this.add.text(GAME_WIDTH - 20, GAME_HEIGHT - 20, 'Joystick/Touch | E Interagieren | SPACE Portal | Q Questlog | M Karte | ESC', { fontFamily: 'monospace', fontSize: fs(18), color: '#8ec6ff' }).setOrigin(1, 1);
 
-    this.helpBox = this.add.rectangle(20, 70, Math.floor(GAME_WIDTH * 0.56), Math.floor(170 * u), 0x10253b, 0.85).setOrigin(0, 0).setStrokeStyle(2, 0x6db5ff);
+    this.helpBox = this.add.rectangle(20, 70, Math.floor(GAME_WIDTH * (IS_MOBILE ? 0.92 : 0.56)), Math.floor((IS_MOBILE ? 148 : 170) * u), 0x10253b, 0.85).setOrigin(0, 0).setStrokeStyle(2, 0x6db5ff);
     this.helpText = this.add.text(34, 84, 'SPIELANLEITUNG\n- Mit NPCs/Häusern sprechen (E)\n- Questlog: Q | Karte: M\n- ESC schließt offene Ansichten\n- Auf Mobil: Touch-Controller nutzen', { fontFamily: 'monospace', fontSize: fs(22), color: '#d4ecff' });
 
-    this.questLogBg = this.add.rectangle(Math.floor(GAME_WIDTH * 0.42), 70, Math.floor(GAME_WIDTH * 0.56), GAME_HEIGHT - 120, 0x0e1b2d, 0.93).setOrigin(0, 0).setStrokeStyle(2, 0xe0c773);
+    this.questLogBg = this.add.rectangle(Math.floor(GAME_WIDTH * (IS_MOBILE ? 0.34 : 0.42)), 70, Math.floor(GAME_WIDTH * (IS_MOBILE ? 0.64 : 0.56)), GAME_HEIGHT - 120, 0x0e1b2d, 0.93).setOrigin(0, 0).setStrokeStyle(2, 0xe0c773);
     this.questLogTitle = this.add.text(Math.floor(GAME_WIDTH * 0.43), 82, 'QUESTLOG (Q)', { fontFamily: 'monospace', fontSize: fs(26), color: '#ffe390' });
     this.questLogText = this.add.text(Math.floor(GAME_WIDTH * 0.43), 120, '', { fontFamily: 'monospace', fontSize: fs(18), color: '#f2f5ff', wordWrap: { width: Math.floor(GAME_WIDTH * 0.53) } });
 
-    this.mapBg = this.add.rectangle(Math.floor(GAME_WIDTH * 0.12), Math.floor(120 * u), Math.floor(GAME_WIDTH * 0.76), Math.floor(GAME_HEIGHT * 0.78), 0x081521, 0.95).setOrigin(0, 0).setStrokeStyle(2, 0x9ad8ff);
+    this.mapBg = this.add.rectangle(Math.floor(GAME_WIDTH * 0.12), Math.floor(120 * u), Math.floor(GAME_WIDTH * (IS_MOBILE ? 0.9 : 0.76)), Math.floor(GAME_HEIGHT * (IS_MOBILE ? 0.74 : 0.78)), 0x081521, 0.95).setOrigin(0, 0).setStrokeStyle(2, 0x9ad8ff);
     this.mapTitle = this.add.text(Math.floor(GAME_WIDTH * 0.13), Math.floor(136 * u), 'KARTENANSICHT (M)', { fontFamily: 'monospace', fontSize: fs(28), color: '#aee6ff' });
     this.mapCanvas = this.add.graphics({ x: Math.floor(GAME_WIDTH * 0.14), y: Math.floor(180 * u) });
 
@@ -83,7 +83,7 @@ export class UISystem extends Phaser.Scene {
     if (!this.mapData?.map) return;
     const { map, playerX, playerY } = this.mapData;
     this.mapCanvas.clear();
-    const panelW = Math.floor(GAME_WIDTH * 0.7);
+    const panelW = Math.floor(GAME_WIDTH * (IS_MOBILE ? 0.82 : 0.7));
     const tile = Math.max(2, Math.min(8, Math.floor(panelW / map.width)));
     const ox = 0;
     const oy = 0;

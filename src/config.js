@@ -8,9 +8,10 @@ import { UISystem } from './engine/UISystem.js';
 
 export const IS_MOBILE = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 900;
 
-export const GAME_WIDTH = IS_MOBILE ? 800 : 2560;
-export const GAME_HEIGHT = IS_MOBILE ? 450 : 1440;
-export const TILE_SIZE = IS_MOBILE ? 40 : 32;
+// Landscape-first mobile base resolution (close to iPhone landscape ratio)
+export const GAME_WIDTH = IS_MOBILE ? 1136 : 2560;
+export const GAME_HEIGHT = IS_MOBILE ? 640 : 1440;
+export const TILE_SIZE = IS_MOBILE ? 36 : 32;
 
 export const gameConfig = {
   type: Phaser.AUTO,

@@ -28,10 +28,30 @@
         width: 100% !important;
         height: 100% !important;
       }
+      #rotate-overlay {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        background: rgba(6, 14, 28, 0.94);
+        color: #d9f3ff;
+        font-family: monospace;
+        font-size: 22px;
+        z-index: 99999;
+        padding: 24px;
+      }
+      @media (orientation: portrait) {
+        #rotate-overlay.mobile-only {
+          display: flex;
+        }
+      }
     </style>
   </head>
   <body>
     <div id="game"></div>
+    <div id="rotate-overlay" class="mobile-only">Bitte Gerät ins Querformat drehen<br/>für ein optimales Spielerlebnis.</div>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
     <script type="module" src="./src/main.js"></script>
   </body>
