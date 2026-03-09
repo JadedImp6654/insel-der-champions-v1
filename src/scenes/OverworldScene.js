@@ -17,7 +17,13 @@ export class OverworldScene extends Phaser.Scene {
 
   create() {
     this.saveData = SaveSystem.load();
-    if (this.returnData.minigame) this.saveData.minigames[this.returnData.minigame] = !!this.returnData.win;
+    if (this.returnData.minigame) {
+      this.saveData.minigames[this.returnData.minigame] = this.saveData.minigames[this.returnData.minigame] || !!this.returnData.win;
+      if (this.returnData.win) {
+        if (!this.saveData.minigameWins) this.saveData.minigameWins = { run: 0, dodge: 0, timing: 0 };
+        this.saveData.minigameWins[this.returnData.minigame] = (this.saveData.minigameWins[this.returnData.minigame] || 0) + 1;
+      }
+    }
 
     this.maps = MapGenerator.getMaps();
     this.questSystem = new QuestSystem(this.saveData);

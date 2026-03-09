@@ -9,6 +9,11 @@ const defaultState = {
     dodge: false,
     timing: false,
   },
+  minigameWins: {
+    run: 0,
+    dodge: 0,
+    timing: 0,
+  },
 };
 
 export class SaveSystem {
@@ -29,6 +34,7 @@ export class SaveSystem {
       ...data,
       player: { ...defaultState.player, ...(data.player || {}) },
       minigames: { ...defaultState.minigames, ...(data.minigames || {}) },
+      minigameWins: { ...defaultState.minigameWins, ...(data.minigameWins || {}) },
       questState: { ...defaultState.questState, ...(data.questState || {}) },
     };
   }

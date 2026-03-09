@@ -20,8 +20,9 @@ export class PreloadScene extends Phaser.Scene {
   create() {
     makeTile(this, 'tile_water_deep', (g, s) => {
       g.fillStyle(0x0b2f55).fillRect(0, 0, s, s);
-      dither(g, 0x17487f, s, 160);
-      dither(g, 0x2a6db2, s, 55);
+      g.fillStyle(0x1f5087, 0.28).fillRect(0, 0, s, s/2);
+      dither(g, 0x17487f, s, 180);
+      dither(g, 0x2a6db2, s, 70);
     });
     makeTile(this, 'tile_water_shallow', (g, s) => {
       g.fillStyle(0x2d72b8).fillRect(0, 0, s, s);
@@ -40,8 +41,9 @@ export class PreloadScene extends Phaser.Scene {
     });
     makeTile(this, 'tile_grass_lush', (g, s) => {
       g.fillStyle(0x3f9442).fillRect(0, 0, s, s);
-      dither(g, 0x67be57, s, 170);
-      dither(g, 0x2d6d2f, s, 110);
+      g.fillStyle(0x7ed76f, 0.18).fillRect(0, 0, s, s/3);
+      dither(g, 0x67be57, s, 190);
+      dither(g, 0x2d6d2f, s, 120);
     });
     makeTile(this, 'tile_grass_dark', (g, s) => {
       g.fillStyle(0x2f7438).fillRect(0, 0, s, s);
@@ -111,6 +113,7 @@ export class PreloadScene extends Phaser.Scene {
 
     makeTile(this, 'tile_house', (g, s) => {
       g.fillStyle(0x925632).fillRect(4, s - 15, s - 8, 15);
+      g.fillStyle(0x6f3f23).fillRect(4, s - 15, s - 8, 2);
       g.fillStyle(0xca483b).fillRect(2, s - 25, s - 4, 11);
       g.fillStyle(0xf6dfa9).fillRect(s / 2 - 2, s - 11, 4, 11);
       g.fillStyle(0x4f7cbf).fillRect(6, s - 11, 6, 6).fillRect(s - 12, s - 11, 6, 6);
@@ -139,6 +142,7 @@ export class PreloadScene extends Phaser.Scene {
 
     makeTile(this, 'player', (g, s) => {
       g.fillStyle(0x2d3f89).fillRect(s / 2 - 8, 4, 16, 10);
+      g.fillStyle(0x4f69d0).fillRect(s / 2 - 7, 5, 14, 3);
       g.fillStyle(0xf4d7b8).fillRect(s / 2 - 6, 14, 12, 8);
       g.fillStyle(0x3b54c1).fillRect(s / 2 - 8, 22, 16, 6);
       g.fillStyle(0x2d3f89).fillRect(s / 2 - 8, 28, 6, 4).fillRect(s / 2 + 2, 28, 6, 4);

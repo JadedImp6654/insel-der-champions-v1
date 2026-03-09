@@ -135,6 +135,12 @@ function buildMainland() {
   map.minigameSpots.push({ x: 60, y: 68, minigame: 'dodge', label: 'Trainingsfeld' });
   map.minigameSpots.push({ x: 102, y: 42, minigame: 'timing', label: 'Tempelplatz' });
   map.minigameSpots.push({ x: 32, y: 52, minigame: 'run', label: 'Sprintstrecke' });
+  map.minigameSpots.push({ x: 74, y: 44, minigame: 'run', label: 'Küstenlauf' });
+  map.minigameSpots.push({ x: 88, y: 60, minigame: 'dodge', label: 'Steinparcours' });
+  map.minigameSpots.push({ x: 118, y: 48, minigame: 'timing', label: 'Klangaltar' });
+  map.minigameSpots.push({ x: 45, y: 56, minigame: 'run', label: 'Waldsprint' });
+  map.minigameSpots.push({ x: 130, y: 66, minigame: 'dodge', label: 'Kometenfeld' });
+  map.minigameSpots.push({ x: 96, y: 30, minigame: 'timing', label: 'Sonnenuhr' });
 
   applyShore(map);
   decorateNature(map, 27);
