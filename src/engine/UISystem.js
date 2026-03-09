@@ -13,21 +13,24 @@ export class UISystem extends Phaser.Scene {
   }
 
   create() {
-    this.dialogBg = this.add.rectangle(20, GAME_HEIGHT - 220, GAME_WIDTH - 40, 190, 0x06111f, 0.92).setOrigin(0, 0).setStrokeStyle(2, 0x90d7ff);
-    this.dialogText = this.add.text(34, GAME_HEIGHT - 205, '', { fontFamily: 'monospace', fontSize: '28px', color: '#d9f3ff', wordWrap: { width: GAME_WIDTH - 68 } });
-    this.questText = this.add.text(20, 20, '', { fontFamily: 'monospace', fontSize: '28px', color: '#ffed9a' }).setScrollFactor(0);
-    this.hintText = this.add.text(GAME_WIDTH - 20, GAME_HEIGHT - 20, 'WASD/Touch | E: Interagieren | SPACE: Portal | Q: Questlog | M: Karte | ESC: Schließen', { fontFamily: 'monospace', fontSize: '18px', color: '#8ec6ff' }).setOrigin(1, 1);
+    const u = Math.max(0.68, Math.min(1, GAME_WIDTH / 2560));
+    const fs = (n) => `${Math.floor(n * u)}px`;
 
-    this.helpBox = this.add.rectangle(20, 70, 980, 170, 0x10253b, 0.85).setOrigin(0, 0).setStrokeStyle(2, 0x6db5ff);
-    this.helpText = this.add.text(34, 84, 'SPIELANLEITUNG\n- Sprich mit NPCs, Häusern und Orten (E).\n- Öffne das Questlog mit Q und die Karte mit M.\n- ESC schließt offene Ansichten.\n- Auf Mobilgeräten: Touch-Buttons unten nutzen.', { fontFamily: 'monospace', fontSize: '22px', color: '#d4ecff' });
+    this.dialogBg = this.add.rectangle(20, GAME_HEIGHT - Math.floor(220 * u), GAME_WIDTH - 40, Math.floor(190 * u), 0x06111f, 0.92).setOrigin(0, 0).setStrokeStyle(2, 0x90d7ff);
+    this.dialogText = this.add.text(34, GAME_HEIGHT - Math.floor(205 * u), '', { fontFamily: 'monospace', fontSize: fs(28), color: '#d9f3ff', wordWrap: { width: GAME_WIDTH - 68 } });
+    this.questText = this.add.text(20, 20, '', { fontFamily: 'monospace', fontSize: fs(28), color: '#ffed9a' }).setScrollFactor(0);
+    this.hintText = this.add.text(GAME_WIDTH - 20, GAME_HEIGHT - 20, 'WASD/Touch | E Interagieren | SPACE Portal | Q Questlog | M Karte | ESC Schließen', { fontFamily: 'monospace', fontSize: fs(18), color: '#8ec6ff' }).setOrigin(1, 1);
 
-    this.questLogBg = this.add.rectangle(980, 70, GAME_WIDTH - 1000, GAME_HEIGHT - 120, 0x0e1b2d, 0.93).setOrigin(0, 0).setStrokeStyle(2, 0xe0c773);
-    this.questLogTitle = this.add.text(996, 82, 'QUESTLOG (Q)', { fontFamily: 'monospace', fontSize: '26px', color: '#ffe390' });
-    this.questLogText = this.add.text(996, 120, '', { fontFamily: 'monospace', fontSize: '18px', color: '#f2f5ff', wordWrap: { width: GAME_WIDTH - 1040 } });
+    this.helpBox = this.add.rectangle(20, 70, Math.floor(GAME_WIDTH * 0.56), Math.floor(170 * u), 0x10253b, 0.85).setOrigin(0, 0).setStrokeStyle(2, 0x6db5ff);
+    this.helpText = this.add.text(34, 84, 'SPIELANLEITUNG\n- Mit NPCs/Häusern sprechen (E)\n- Questlog: Q | Karte: M\n- ESC schließt offene Ansichten\n- Auf Mobil: Touch-Controller nutzen', { fontFamily: 'monospace', fontSize: fs(22), color: '#d4ecff' });
 
-    this.mapBg = this.add.rectangle(220, 120, GAME_WIDTH - 440, GAME_HEIGHT - 240, 0x081521, 0.95).setOrigin(0, 0).setStrokeStyle(2, 0x9ad8ff);
-    this.mapTitle = this.add.text(240, 136, 'KARTENANSICHT (M)', { fontFamily: 'monospace', fontSize: '28px', color: '#aee6ff' });
-    this.mapCanvas = this.add.graphics({ x: 250, y: 180 });
+    this.questLogBg = this.add.rectangle(Math.floor(GAME_WIDTH * 0.42), 70, Math.floor(GAME_WIDTH * 0.56), GAME_HEIGHT - 120, 0x0e1b2d, 0.93).setOrigin(0, 0).setStrokeStyle(2, 0xe0c773);
+    this.questLogTitle = this.add.text(Math.floor(GAME_WIDTH * 0.43), 82, 'QUESTLOG (Q)', { fontFamily: 'monospace', fontSize: fs(26), color: '#ffe390' });
+    this.questLogText = this.add.text(Math.floor(GAME_WIDTH * 0.43), 120, '', { fontFamily: 'monospace', fontSize: fs(18), color: '#f2f5ff', wordWrap: { width: Math.floor(GAME_WIDTH * 0.53) } });
+
+    this.mapBg = this.add.rectangle(Math.floor(GAME_WIDTH * 0.12), Math.floor(120 * u), Math.floor(GAME_WIDTH * 0.76), Math.floor(GAME_HEIGHT * 0.78), 0x081521, 0.95).setOrigin(0, 0).setStrokeStyle(2, 0x9ad8ff);
+    this.mapTitle = this.add.text(Math.floor(GAME_WIDTH * 0.13), Math.floor(136 * u), 'KARTENANSICHT (M)', { fontFamily: 'monospace', fontSize: fs(28), color: '#aee6ff' });
+    this.mapCanvas = this.add.graphics({ x: Math.floor(GAME_WIDTH * 0.14), y: Math.floor(180 * u) });
 
     this.dialogBg.setVisible(false);
     this.dialogText.setVisible(false);
@@ -80,9 +83,10 @@ export class UISystem extends Phaser.Scene {
     if (!this.mapData?.map) return;
     const { map, playerX, playerY } = this.mapData;
     this.mapCanvas.clear();
-    const tile = Math.max(2, Math.min(8, Math.floor((GAME_WIDTH - 520) / map.width)));
-    const ox = 250;
-    const oy = 180;
+    const panelW = Math.floor(GAME_WIDTH * 0.7);
+    const tile = Math.max(2, Math.min(8, Math.floor(panelW / map.width)));
+    const ox = 0;
+    const oy = 0;
     for (let y = 0; y < map.height; y++) {
       for (let x = 0; x < map.width; x++) {
         const t = map.ground[y][x];

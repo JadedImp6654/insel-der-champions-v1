@@ -6,9 +6,11 @@ import { MinigameDodgeScene } from './scenes/MinigameDodgeScene.js';
 import { MinigameTimingScene } from './scenes/MinigameTimingScene.js';
 import { UISystem } from './engine/UISystem.js';
 
-export const GAME_WIDTH = 2560;
-export const GAME_HEIGHT = 1440;
-export const TILE_SIZE = 32;
+const IS_MOBILE = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 900;
+
+export const GAME_WIDTH = IS_MOBILE ? 1280 : 2560;
+export const GAME_HEIGHT = IS_MOBILE ? 720 : 1440;
+export const TILE_SIZE = IS_MOBILE ? 28 : 32;
 
 export const gameConfig = {
   type: Phaser.AUTO,
@@ -20,6 +22,12 @@ export const gameConfig = {
   backgroundColor: '#091826',
   antialias: false,
   roundPixels: true,
+  scale: {
+    mode: Phaser.Scale.FIT,
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+    width: GAME_WIDTH,
+    height: GAME_HEIGHT,
+  },
   physics: {
     default: 'arcade',
     arcade: {
