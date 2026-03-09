@@ -29,17 +29,18 @@ export class OverworldScene extends Phaser.Scene {
     this.currentMapId = this.returnData.map || this.saveData.map || 'mainland';
     this.loadMap(this.currentMapId, this.returnData.x, this.returnData.y);
 
-    this.ui = this.scene.get('UISystem');
     if (!this.scene.isActive('UISystem')) this.scene.launch('UISystem');
-    this.ui = this.scene.get('UISystem');
-    this.ui.bind(this);
-    this.ui.setQuest(this.questSystem.getActiveText());
+    this.time.delayedCall(0, () => {
+      this.ui = this.scene.get('UISystem');
+      this.ui.bind(this);
+      this.ui.setQuest(this.questSystem.getActiveText());
+    });
 
     this.keys = this.input.keyboard.addKeys({ up: 'W', down: 'S', left: 'A', right: 'D', interact: 'E', portal: 'SPACE' });
 
     this.events.on('dialog:end', () => {
       this.player.body.moves = true;
-      this.ui.setQuest(this.questSystem.getActiveText());
+      if (this.ui?.setQuest) this.ui.setQuest(this.questSystem.getActiveText());
       SaveSystem.save(this.saveData);
     });
   }
