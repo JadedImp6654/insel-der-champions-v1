@@ -11,10 +11,18 @@ export class UISystem extends Phaser.Scene {
   }
 
   create() {
-    this.dialogBg = this.add.rectangle(6, GAME_HEIGHT - 54, GAME_WIDTH - 12, 48, 0x06111f, 0.9).setOrigin(0, 0).setStrokeStyle(1, 0x90d7ff);
-    this.dialogText = this.add.text(12, GAME_HEIGHT - 50, '', { fontFamily: 'monospace', fontSize: '8px', color: '#d9f3ff', wordWrap: { width: GAME_WIDTH - 24 } });
-    this.questText = this.add.text(6, 6, '', { fontFamily: 'monospace', fontSize: '8px', color: '#ffed9a' }).setScrollFactor(0);
-    this.hintText = this.add.text(GAME_WIDTH - 5, GAME_HEIGHT - 4, 'E: Interagieren | SPACE: Portal', { fontFamily: 'monospace', fontSize: '6px', color: '#8ec6ff' }).setOrigin(1, 1);
+    this.dialogBg = this.add.rectangle(10, GAME_HEIGHT - 98, GAME_WIDTH - 20, 88, 0x06111f, 0.9)
+      .setOrigin(0, 0)
+      .setStrokeStyle(2, 0x90d7ff);
+    this.dialogText = this.add.text(18, GAME_HEIGHT - 90, '', {
+      fontFamily: 'monospace',
+      fontSize: '14px',
+      color: '#d9f3ff',
+      wordWrap: { width: GAME_WIDTH - 36 },
+      lineSpacing: 3,
+    });
+    this.questText = this.add.text(10, 10, '', { fontFamily: 'monospace', fontSize: '14px', color: '#ffed9a' }).setScrollFactor(0);
+    this.hintText = this.add.text(GAME_WIDTH - 8, GAME_HEIGHT - 8, 'WASD: Laufen | E: Interagieren | SPACE: Portal/Weiter', { fontFamily: 'monospace', fontSize: '10px', color: '#8ec6ff' }).setOrigin(1, 1);
 
     this.dialogBg.setVisible(false);
     this.dialogText.setVisible(false);
@@ -30,6 +38,7 @@ export class UISystem extends Phaser.Scene {
   }
 
   setQuest(text) {
+    if (!this.questText) return;
     this.questText.setText(text);
   }
 
@@ -73,7 +82,7 @@ export class UISystem extends Phaser.Scene {
   update(_, dt) {
     if (!this.typing || !this.lines.length) return;
     this.charTimer = (this.charTimer || 0) + dt;
-    if (this.charTimer < 24) return;
+    if (this.charTimer < 18) return;
     this.charTimer = 0;
     this.charIndex++;
     const line = this.lines[this.lineIndex];

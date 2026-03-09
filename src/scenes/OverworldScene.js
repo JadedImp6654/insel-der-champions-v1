@@ -103,7 +103,7 @@ export class OverworldScene extends Phaser.Scene {
       return;
     }
 
-    const speed = 70;
+    const speed = 115;
     let vx = 0;
     let vy = 0;
     if (this.keys.left.isDown) vx = -speed;
