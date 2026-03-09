@@ -8,7 +8,7 @@ import { UISystem } from './engine/UISystem.js';
 
 export const GAME_WIDTH = 1920;
 export const GAME_HEIGHT = 1080;
-export const TILE_SIZE = 16;
+export const TILE_SIZE = 32;
 
 export const gameConfig = {
   type: Phaser.AUTO,
@@ -17,7 +17,7 @@ export const gameConfig = {
   height: GAME_HEIGHT,
   pixelArt: true,
   zoom: 1,
-  backgroundColor: '#091826',
+  backgroundColor: '#081523',
   antialias: false,
   roundPixels: true,
   physics: {

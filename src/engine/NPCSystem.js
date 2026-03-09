@@ -29,7 +29,7 @@ export class NPCSystem {
       .map((c) => ({ c, dist: Phaser.Math.Distance.Between(player.x, player.y, c.px, c.py) }))
       .sort((a, b) => a.dist - b.dist)[0];
 
-    if (!nearest || nearest.dist > 28) return false;
+    if (!nearest || nearest.dist > 52) return false;
     const target = nearest.c;
 
     if (target.kind === 'npc') {

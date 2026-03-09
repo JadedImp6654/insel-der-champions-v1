@@ -3,26 +3,23 @@ export class QuestSystem {
     this.saveData = saveData;
     if (!this.saveData.questState) this.saveData.questState = {};
 
-    this.quests = Array.from({ length: 20 }, (_, i) => ({
+    this.quests = Array.from({ length: 30 }, (_, i) => ({
       id: `q${i + 1}`,
-      title: i < 10 ? `Hauptquest ${i + 1}` : `Nebenquest ${i - 9}`,
-      description: i < 10
-        ? `Schließe Etappe ${i + 1} deiner Championreise ab.`
-        : `Erkunde die Insel und finde ein besonderes Geheimnis (${i - 9}).`,
-      type: i < 10 ? 'main' : 'side',
+      title: i < 15 ? `Hauptquest ${i + 1}` : `Nebenquest ${i - 14}`,
+      description: i < 15
+        ? `Bringe die Championreise in Abschnitt ${i + 1} voran.`
+        : `Erforsche besondere Orte und Geheimnisse (${i - 14}).`,
+      type: i < 15 ? 'main' : 'side',
     }));
 
     this.quests.forEach((q, idx) => {
-      if (!this.saveData.questState[q.id]) {
-        this.saveData.questState[q.id] = { step: 0, done: idx === 0 ? false : false, unlocked: idx === 0 || idx >= 10 };
-      }
+      if (!this.saveData.questState[q.id]) this.saveData.questState[q.id] = { done: false, unlocked: idx === 0 || idx >= 15 };
     });
   }
 
   unlockNextMain() {
-    for (let i = 0; i < 10; i++) {
-      const q = this.saveData.questState[`q${i + 1}`];
-      if (q.done && i < 9) this.saveData.questState[`q${i + 2}`].unlocked = true;
+    for (let i = 0; i < 15; i++) {
+      if (this.saveData.questState[`q${i + 1}`].done && i < 14) this.saveData.questState[`q${i + 2}`].unlocked = true;
     }
   }
 
@@ -44,28 +41,26 @@ export class QuestSystem {
   tryCompleteAtMira() {
     const allTrials = ['run', 'dodge', 'timing'].every((m) => this.saveData.minigames?.[m]);
     if (allTrials) {
-      this.completeQuest('q1');
-      this.completeQuest('q5');
+      ['q1', 'q5', 'q6', 'q7'].forEach((id) => this.completeQuest(id));
       return true;
     }
     return false;
   }
 
   markEasterEgg(id) {
-    const idx = { easter_1: 'q11', easter_2: 'q12', easter_3: 'q13' }[id];
+    const idx = { easter_1: 'q16', easter_2: 'q17', easter_3: 'q18', easter_4: 'q19', easter_5: 'q20' }[id];
     if (idx) this.completeQuest(idx);
   }
 
   getActiveText() {
     const next = this.quests.find((q) => this.saveData.questState[q.id].unlocked && !this.saveData.questState[q.id].done);
-    if (!next) return 'Alle Quests erledigt!';
-    return `Aktive Quest: ${next.title}`;
+    return next ? `Aktive Quest: ${next.title}` : 'Alle Quests erledigt!';
   }
 
   getQuestLogText() {
     return this.quests
       .filter((q) => this.saveData.questState[q.id].unlocked)
-      .map((q) => `${this.saveData.questState[q.id].done ? '✔' : '•'} ${q.title}: ${q.description}`)
+      .map((q) => `${this.saveData.questState[q.id].done ? '✔' : '•'} ${q.title}`)
       .join('\n');
   }
 }

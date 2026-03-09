@@ -60,7 +60,7 @@ export class OverworldScene extends Phaser.Scene {
     this.mapLayer = this.tileRenderer.render(this.map);
 
     if (!this.player) {
-      this.player = this.physics.add.sprite((spawnX ?? this.saveData.player.x / TILE_SIZE) * TILE_SIZE, (spawnY ?? this.saveData.player.y / TILE_SIZE) * TILE_SIZE, 'player').setSize(10, 14).setOffset(3, 2);
+      this.player = this.physics.add.sprite((spawnX ?? this.saveData.player.x / TILE_SIZE) * TILE_SIZE, (spawnY ?? this.saveData.player.y / TILE_SIZE) * TILE_SIZE, 'player').setSize(20, 28).setOffset(6, 4);
       this.player.setCollideWorldBounds(true);
     } else {
       this.player.setPosition((spawnX ?? this.map.portals[0]?.x ?? 10) * TILE_SIZE, (spawnY ?? this.map.portals[0]?.y ?? 10) * TILE_SIZE);
@@ -106,7 +106,7 @@ export class OverworldScene extends Phaser.Scene {
       return;
     }
 
-    const speed = 145;
+    const speed = 210;
     let vx = 0;
     let vy = 0;
     if (this.keys.left.isDown) vx = -speed;

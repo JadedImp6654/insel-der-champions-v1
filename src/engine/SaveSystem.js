@@ -2,7 +2,7 @@ const KEY = 'insel-der-champions-save-v1';
 
 const defaultState = {
   map: 'mainland',
-  player: { x: 20 * 16, y: 22 * 16 },
+  player: { x: 20 * 32, y: 22 * 32 },
   questState: {},
   minigames: {
     run: false,
