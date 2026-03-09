@@ -6,8 +6,8 @@ import { MinigameDodgeScene } from './scenes/MinigameDodgeScene.js';
 import { MinigameTimingScene } from './scenes/MinigameTimingScene.js';
 import { UISystem } from './engine/UISystem.js';
 
-export const GAME_WIDTH = 640;
-export const GAME_HEIGHT = 360;
+export const GAME_WIDTH = 1920;
+export const GAME_HEIGHT = 1080;
 export const TILE_SIZE = 16;
 
 export const gameConfig = {
@@ -16,7 +16,7 @@ export const gameConfig = {
   width: GAME_WIDTH,
   height: GAME_HEIGHT,
   pixelArt: true,
-  zoom: 2,
+  zoom: 1,
   backgroundColor: '#091826',
   antialias: false,
   roundPixels: true,

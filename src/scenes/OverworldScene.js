@@ -17,9 +17,7 @@ export class OverworldScene extends Phaser.Scene {
 
   create() {
     this.saveData = SaveSystem.load();
-    if (this.returnData.minigame) {
-      this.saveData.minigames[this.returnData.minigame] = !!this.returnData.win;
-    }
+    if (this.returnData.minigame) this.saveData.minigames[this.returnData.minigame] = !!this.returnData.win;
 
     this.maps = MapGenerator.getMaps();
     this.questSystem = new QuestSystem(this.saveData);
@@ -33,16 +31,22 @@ export class OverworldScene extends Phaser.Scene {
     this.time.delayedCall(0, () => {
       this.ui = this.scene.get('UISystem');
       this.ui.bind(this);
-      this.ui.setQuest(this.questSystem.getActiveText());
+      this.syncUI();
     });
 
-    this.keys = this.input.keyboard.addKeys({ up: 'W', down: 'S', left: 'A', right: 'D', interact: 'E', portal: 'SPACE' });
+    this.keys = this.input.keyboard.addKeys({ up: 'W', down: 'S', left: 'A', right: 'D', interact: 'E', portal: 'SPACE', retry: 'R' });
 
     this.events.on('dialog:end', () => {
       this.player.body.moves = true;
-      if (this.ui?.setQuest) this.ui.setQuest(this.questSystem.getActiveText());
+      this.syncUI();
       SaveSystem.save(this.saveData);
     });
+  }
+
+  syncUI() {
+    if (!this.ui) return;
+    this.ui.setQuest(this.questSystem.getActiveText());
+    this.ui.setQuestLog(this.questSystem.getQuestLogText());
   }
 
   loadMap(mapId, spawnX, spawnY) {
@@ -64,14 +68,22 @@ export class OverworldScene extends Phaser.Scene {
 
     this.physics.world.setBounds(0, 0, this.map.width * TILE_SIZE, this.map.height * TILE_SIZE);
     this.cameras.main.setBounds(0, 0, this.map.width * TILE_SIZE, this.map.height * TILE_SIZE);
-    this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
+    this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
 
     this.physics.add.collider(this.player, this.tileRenderer.colliders);
 
     this.npcSystem = new NPCSystem(this, this.dialogSystem, this.questSystem);
-    this.npcSystem.spawn(this.map.npcs);
+    this.npcSystem.spawn(this.map.npcs || []);
+    this.npcSystem.setInteractives(this.map.interactives || []);
 
     this.saveData.map = mapId;
+  }
+
+  startMinigame(name) {
+    this.saveData.player = { x: this.player.x, y: this.player.y };
+    SaveSystem.save(this.saveData);
+    const sceneName = { run: 'MinigameRunScene', dodge: 'MinigameDodgeScene', timing: 'MinigameTimingScene' }[name];
+    this.scene.start(sceneName, { returnMap: this.currentMapId });
   }
 
   handlePortal() {
@@ -82,19 +94,10 @@ export class OverworldScene extends Phaser.Scene {
 
     if (portal.targetMap) {
       this.loadMap(portal.targetMap, portal.tx, portal.ty);
+      this.syncUI();
       return;
     }
-
-    if (portal.targetMinigame) {
-      this.saveData.player = { x: this.player.x, y: this.player.y };
-      SaveSystem.save(this.saveData);
-      const sceneName = {
-        run: 'MinigameRunScene',
-        dodge: 'MinigameDodgeScene',
-        timing: 'MinigameTimingScene',
-      }[portal.targetMinigame];
-      this.scene.start(sceneName, { returnMap: this.currentMapId });
-    }
+    if (portal.targetMinigame) this.startMinigame(portal.targetMinigame);
   }
 
   update() {
@@ -103,20 +106,23 @@ export class OverworldScene extends Phaser.Scene {
       return;
     }
 
-    const speed = 115;
+    const speed = 145;
     let vx = 0;
     let vy = 0;
     if (this.keys.left.isDown) vx = -speed;
     else if (this.keys.right.isDown) vx = speed;
     if (this.keys.up.isDown) vy = -speed;
     else if (this.keys.down.isDown) vy = speed;
-
     this.player.setVelocity(vx, vy);
 
     if (Phaser.Input.Keyboard.JustDown(this.keys.interact)) {
-      if (this.npcSystem.interactNearest(this.player)) this.player.body.moves = false;
+      if (this.npcSystem.interactNearest(this.player)) {
+        this.player.body.moves = false;
+        this.syncUI();
+      }
     }
     if (Phaser.Input.Keyboard.JustDown(this.keys.portal)) this.handlePortal();
+    if (Phaser.Input.Keyboard.JustDown(this.keys.retry)) this.startMinigame('run');
 
     this.saveData.player = { x: this.player.x, y: this.player.y };
     SaveSystem.save(this.saveData);

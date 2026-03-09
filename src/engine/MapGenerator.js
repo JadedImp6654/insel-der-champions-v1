@@ -28,37 +28,6 @@ function path(layer, x0, y0, x1, y1, tile = 'path') {
   }
 }
 
-function decorateNature(map, seed = 8) {
-  for (let y = 1; y < map.height - 1; y++) {
-    for (let x = 1; x < map.width - 1; x++) {
-      const tile = map.ground[y][x];
-      const n = noise(x, y, seed);
-      const n2 = noise(x, y, seed + 13);
-
-      if (tile === 'grass_lush' || tile === 'grass_dark') {
-        if (n > 0.92) {
-          map.decor[y][x] = n2 > 0.5 ? 'tree_oak' : 'tree_pine';
-          map.collision[y][x] = 1;
-        } else if (n > 0.88) {
-          map.decor[y][x] = 'tree_palm';
-          map.collision[y][x] = 1;
-        } else if (n > 0.84) {
-          map.decor[y][x] = 'bush';
-          map.collision[y][x] = 1;
-        } else if (n > 0.81) {
-          map.decor[y][x] = n2 > 0.4 ? 'flower_red' : 'flower_blue';
-        } else if (n > 0.78) {
-          map.decor[y][x] = n2 > 0.5 ? 'rock_small' : 'rock_big';
-          map.collision[y][x] = 1;
-        }
-      }
-
-      if ((tile === 'water_shallow' || tile === 'sand') && n > 0.93) map.decor[y][x] = 'reed';
-      if ((tile === 'water_deep' || tile === 'water_shallow') && n > 0.95) map.decor[y][x] = 'foam';
-    }
-  }
-}
-
 function applyShore(map) {
   for (let y = 0; y < map.height; y++) {
     for (let x = 0; x < map.width; x++) {
@@ -67,115 +36,123 @@ function applyShore(map) {
       if (nearDeep) map.ground[y][x] = 'sand';
     }
   }
-
   for (let y = 0; y < map.height; y++) {
     for (let x = 0; x < map.width; x++) {
-      if (map.ground[y][x] === 'water_deep') {
-        const nearLand = [[1,0],[-1,0],[0,1],[0,-1]].some(([dx, dy]) => {
-          const t = map.ground[y + dy]?.[x + dx];
-          return t && t !== 'water_deep' && t !== 'water_shallow';
-        });
-        if (nearLand) map.ground[y][x] = 'water_shallow';
-      }
+      if (map.ground[y][x] !== 'water_deep') continue;
+      const nearLand = [[1,0],[-1,0],[0,1],[0,-1]].some(([dx, dy]) => {
+        const t = map.ground[y + dy]?.[x + dx];
+        return t && t !== 'water_deep' && t !== 'water_shallow';
+      });
+      if (nearLand) map.ground[y][x] = 'water_shallow';
     }
   }
 }
 
-function placeVillage(map, x, y) {
-  const houses = [[x, y], [x + 4, y + 3], [x + 8, y], [x + 12, y + 3], [x + 16, y]];
-  houses.forEach(([hx, hy], i) => {
-    map.decor[hy][hx] = i === 2 ? 'house_large' : 'house';
-    map.collision[hy][hx] = 1;
-  });
+function decorateNature(map, seed = 8) {
+  for (let y = 1; y < map.height - 1; y++) {
+    for (let x = 1; x < map.width - 1; x++) {
+      const tile = map.ground[y][x];
+      const n = noise(x, y, seed);
+      const n2 = noise(x, y, seed + 13);
+
+      if (tile === 'grass_lush' || tile === 'grass_dark') {
+        if (n > 0.93) {
+          const trees = ['tree_oak', 'tree_pine', 'tree_palm', 'tree_birch', 'tree_willow'];
+          map.decor[y][x] = trees[Math.floor(n2 * trees.length)];
+          map.collision[y][x] = 1;
+        } else if (n > 0.88) {
+          map.decor[y][x] = `flower_${1 + Math.floor(n2 * 15)}`;
+        } else if (n > 0.72) {
+          const miscId = 1 + Math.floor(n2 * 45);
+          map.decor[y][x] = `misc_${miscId}`;
+          if (miscId % 5 <= 2) map.collision[y][x] = 1;
+        }
+      }
+
+      if ((tile === 'water_shallow' || tile === 'sand') && n > 0.95) map.decor[y][x] = 'foam';
+    }
+  }
+}
+
+function addHouse(map, x, y, large = false, name = 'Haus') {
+  map.decor[y][x] = large ? 'house_large' : 'house';
+  map.collision[y][x] = 1;
+  map.interactives.push({ id: `house_${x}_${y}`, kind: 'house', x: x + 1, y: y + 1, dialog: [`${name}`, 'Ein gemütliches Zuhause mit eigenen Geschichten.'] });
 }
 
 function buildMainland() {
-  const width = 120;
-  const height = 84;
+  const width = 160;
+  const height = 100;
   const map = {
     id: 'mainland', width, height,
     ground: makeLayer(width, height, 'water_deep'),
     decor: makeLayer(width, height, null),
     collision: makeLayer(width, height, 0),
-    npcs: [], portals: [],
+    npcs: [], portals: [], interactives: [],
   };
 
-  carveEllipse(map.ground, 26, 43, 22, 18, 'grass_lush');
-  carveEllipse(map.ground, 52, 35, 24, 20, 'grass_lush');
-  carveEllipse(map.ground, 83, 28, 22, 17, 'grass_dark');
-  carveEllipse(map.ground, 86, 58, 19, 14, 'grass_lush');
-  carveEllipse(map.ground, 104, 43, 13, 11, 'grass_dark');
+  carveEllipse(map.ground, 34, 52, 30, 22, 'grass_lush');
+  carveEllipse(map.ground, 70, 44, 30, 24, 'grass_lush');
+  carveEllipse(map.ground, 108, 40, 28, 22, 'grass_dark');
+  carveEllipse(map.ground, 114, 72, 26, 18, 'grass_lush');
+  carveEllipse(map.ground, 145, 56, 15, 12, 'grass_dark');
 
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      if (map.ground[y][x].startsWith('grass') && noise(x, y, 77) > 0.65) map.ground[y][x] = 'grass_dark';
-    }
-  }
+  path(map.ground, 20, 55, 44, 49, 'path');
+  path(map.ground, 44, 49, 72, 43, 'path');
+  path(map.ground, 72, 43, 108, 41, 'path');
+  path(map.ground, 72, 43, 110, 72, 'path');
+  path(map.ground, 108, 41, 140, 56, 'path');
 
-  path(map.ground, 18, 45, 40, 41, 'path');
-  path(map.ground, 40, 41, 64, 34, 'path');
-  path(map.ground, 64, 34, 86, 35, 'path');
-  path(map.ground, 64, 34, 86, 56, 'path');
-  path(map.ground, 86, 35, 103, 44, 'path');
+  for (let y = 62; y < 76; y++) for (let x = 56; x < 78; x++) map.ground[y][x] = (x + y) % 2 ? 'field_crop' : 'field_soil';
 
-  for (let y = 52; y < 62; y++) {
-    for (let x = 49; x < 63; x++) {
-      map.ground[y][x] = (x + y) % 2 === 0 ? 'field_crop' : 'field_soil';
-    }
-  }
+  addHouse(map, 22, 50, false, 'Miras Haus');
+  addHouse(map, 28, 54, false, 'Fischers Hütte');
+  addHouse(map, 34, 50, true, 'Dorfhalle');
+  addHouse(map, 88, 39, false, 'Werkstatt');
+  addHouse(map, 95, 45, false, 'Gartenhaus');
+  addHouse(map, 118, 71, true, 'Akademie');
 
-  for (let y = 22; y < 29; y++) {
-    for (let x = 74; x < 88; x++) {
-      map.ground[y][x] = 'rock_ground';
-    }
-  }
+  map.decor[26][91] = 'tower';
+  map.collision[26][91] = 1;
+  map.interactives.push({ id: 'tower', kind: 'landmark', x: 91, y: 26, dialog: ['Alte Wachturm-Ruine.', 'Easter Egg: Unter dem Turm liegt ein verborgenes Emblem.'] });
 
-  placeVillage(map, 20, 40);
-  placeVillage(map, 72, 31);
-  map.decor[95 % height][105] = 'tower';
-  map.collision[95 % height][105] = 1;
+  map.npcs.push({ id: 'mira', name: 'Mira', x: 24, y: 54, palette: 'pink', dialog: ['Willkommen Champion!', 'Sieh in dein Questlog (Taste Q).'], questId: 'q1' });
+  map.npcs.push({ id: 'finn', name: 'Finn', x: 63, y: 68, palette: 'green', dialog: ['Die Felder sind voller seltener Blumen.'], questId: 'q4' });
+  map.npcs.push({ id: 'leon', name: 'Leon', x: 98, y: 42, palette: 'blue', dialog: ['Such die drei Portale und die Geheimzeichen.'], questId: 'q7' });
+  map.npcs.push({ id: 'sora', name: 'Sora', x: 120, y: 72, palette: 'gold', dialog: ['Ich kenne Nebenquests und Easter Eggs.'], questId: 'q10' });
 
-  map.npcs.push({ id: 'mira', name: 'Mira', x: 24, y: 45, palette: 'pink', dialog: ['Willkommen auf der großen Insel!', 'Erkunde alle Prüfungsinseln und komm zurück.'] });
-  map.npcs.push({ id: 'finn', name: 'Finn', x: 56, y: 53, palette: 'green', dialog: ['Diese Felder versorgen das ganze Dorf.'] });
-  map.npcs.push({ id: 'leon', name: 'Leon', x: 82, y: 35, palette: 'blue', dialog: ['Im Nordosten liegen uralte Steinpfade.'] });
-  map.npcs.push({ id: 'sora', name: 'Sora', x: 102, y: 45, palette: 'gold', dialog: ['Die Portale wurden erneuert und glänzen stärker denn je.'] });
+  map.decor[41][108] = 'portal';
+  map.decor[72][110] = 'portal';
+  map.decor[56][140] = 'portal';
 
-  map.decor[34][86] = 'portal';
-  map.decor[58][87] = 'portal';
-  map.decor[46][34] = 'portal';
+  map.portals.push({ x: 108, y: 41, targetMap: 'runIsland', tx: 28, ty: 46, label: 'Rennen' });
+  map.portals.push({ x: 110, y: 72, targetMap: 'dodgeIsland', tx: 28, ty: 46, label: 'Ausweichen' });
+  map.portals.push({ x: 140, y: 56, targetMap: 'timingIsland', tx: 28, ty: 46, label: 'Timing' });
 
-  map.portals.push({ x: 86, y: 34, targetMap: 'runIsland', tx: 16, ty: 46, label: 'Rennen' });
-  map.portals.push({ x: 87, y: 58, targetMap: 'dodgeIsland', tx: 16, ty: 46, label: 'Ausweichen' });
-  map.portals.push({ x: 34, y: 46, targetMap: 'timingIsland', tx: 16, ty: 46, label: 'Timing' });
+  map.interactives.push({ id: 'easter_1', kind: 'easteregg', x: 50, y: 35, dialog: ['Easter Egg #1: Ein glitzernder Muschelstein!'] });
+  map.interactives.push({ id: 'easter_2', kind: 'easteregg', x: 132, y: 61, dialog: ['Easter Egg #2: Geheimschrift im Sand entdeckt.'] });
+  map.interactives.push({ id: 'easter_3', kind: 'easteregg', x: 76, y: 28, dialog: ['Easter Egg #3: Das Emblem der ersten Champion-Generation.'] });
 
   applyShore(map);
-  decorateNature(map, 21);
+  decorateNature(map, 27);
   return map;
 }
 
 function buildTrialIsland(id) {
-  const width = 56;
-  const height = 56;
-  const map = { id, width, height, ground: makeLayer(width, height, 'water_deep'), decor: makeLayer(width, height, null), collision: makeLayer(width, height, 0), npcs: [], portals: [] };
-
-  carveEllipse(map.ground, 28, 30, 22, 18, 'grass_lush');
-  carveEllipse(map.ground, 18, 21, 10, 8, 'grass_dark');
-  carveEllipse(map.ground, 38, 18, 8, 7, 'grass_lush');
-
-  path(map.ground, 28, 46, 28, 28, 'path');
-  path(map.ground, 28, 28, 36, 22, 'path');
-
-  for (let y = 24; y < 30; y++) {
-    for (let x = 10; x < 18; x++) map.ground[y][x] = 'field_crop';
-  }
-
-  map.decor[28][28] = 'portal';
-  map.decor[46][28] = 'portal';
-  map.portals.push({ x: 28, y: 46, targetMap: 'mainland', tx: 84, ty: 34, label: 'Zurück' });
-  map.portals.push({ x: 28, y: 28, targetMinigame: id.replace('Island', ''), label: 'Start' });
-
+  const width = 64;
+  const height = 64;
+  const map = { id, width, height, ground: makeLayer(width, height, 'water_deep'), decor: makeLayer(width, height, null), collision: makeLayer(width, height, 0), npcs: [], portals: [], interactives: [] };
+  carveEllipse(map.ground, 32, 34, 24, 20, 'grass_lush');
+  carveEllipse(map.ground, 20, 24, 10, 8, 'grass_dark');
+  carveEllipse(map.ground, 43, 22, 9, 8, 'grass_lush');
+  path(map.ground, 32, 48, 32, 30, 'path');
+  map.decor[30][32] = 'portal';
+  map.decor[48][32] = 'portal';
+  map.portals.push({ x: 32, y: 48, targetMap: 'mainland', tx: 108, ty: 41, label: 'Zurück' });
+  map.portals.push({ x: 32, y: 30, targetMinigame: id.replace('Island', ''), label: 'Start' });
+  map.interactives.push({ id: `${id}_hint`, kind: 'hint', x: 26, y: 28, dialog: ['Tipp: Beobachte den Rhythmus und bleibe ruhig.'] });
   applyShore(map);
-  decorateNature(map, id.length * 9);
+  decorateNature(map, id.length * 10);
   return map;
 }
 
