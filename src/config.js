@@ -6,11 +6,11 @@ import { MinigameDodgeScene } from './scenes/MinigameDodgeScene.js';
 import { MinigameTimingScene } from './scenes/MinigameTimingScene.js';
 import { UISystem } from './engine/UISystem.js';
 
-const IS_MOBILE = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 900;
+export const IS_MOBILE = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 900;
 
-export const GAME_WIDTH = IS_MOBILE ? 1280 : 2560;
-export const GAME_HEIGHT = IS_MOBILE ? 720 : 1440;
-export const TILE_SIZE = IS_MOBILE ? 28 : 32;
+export const GAME_WIDTH = IS_MOBILE ? 800 : 2560;
+export const GAME_HEIGHT = IS_MOBILE ? 450 : 1440;
+export const TILE_SIZE = IS_MOBILE ? 40 : 32;
 
 export const gameConfig = {
   type: Phaser.AUTO,

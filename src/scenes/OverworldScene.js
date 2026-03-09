@@ -1,4 +1,4 @@
-import { TILE_SIZE, GAME_WIDTH, GAME_HEIGHT } from '../config.js';
+import { TILE_SIZE, GAME_WIDTH, GAME_HEIGHT, IS_MOBILE } from '../config.js';
 import { MapGenerator } from '../engine/MapGenerator.js';
 import { TileRenderer } from '../engine/TileRenderer.js';
 import { SaveSystem } from '../engine/SaveSystem.js';
@@ -36,6 +36,7 @@ export class OverworldScene extends Phaser.Scene {
 
     this.keys = this.input.keyboard.addKeys({ up: 'W', down: 'S', left: 'A', right: 'D', interact: 'E', portal: 'SPACE' });
     this.setupTouchControls();
+    this.setupFullscreenAuto();
 
     this.events.on('dialog:end', () => {
       this.player.body.moves = true;
@@ -44,27 +45,66 @@ export class OverworldScene extends Phaser.Scene {
     });
   }
 
+  setupFullscreenAuto() {
+    const req = () => {
+      if (document.fullscreenElement) return;
+      const el = document.documentElement;
+      if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+    };
+    req();
+    this.input.once('pointerdown', req);
+  }
+
   setupTouchControls() {
-    this.touch = { up: false, down: false, left: false, right: false, interact: false, portal: false };
+    this.touch = { up: false, down: false, left: false, right: false, interact: false, portal: false, joyX: 0, joyY: 0 };
     if (!this.sys.game.device.input.touch) return;
 
-    const size = Math.max(84, Math.floor(Math.min(GAME_WIDTH, GAME_HEIGHT) * 0.07));
+    const baseR = Math.max(64, Math.floor(Math.min(GAME_WIDTH, GAME_HEIGHT) * 0.10));
+    const knobR = Math.floor(baseR * 0.44);
+    const baseX = baseR + 26;
+    const baseY = GAME_HEIGHT - baseR - 26;
+
+    const base = this.add.circle(baseX, baseY, baseR, 0x0a2236, 0.38).setScrollFactor(0).setDepth(9999).setStrokeStyle(3, 0x88d4ff).setInteractive();
+    const knob = this.add.circle(baseX, baseY, knobR, 0x5fb7ff, 0.68).setScrollFactor(0).setDepth(10000);
+
+    const updateJoy = (pointer) => {
+      const dx = pointer.x - baseX;
+      const dy = pointer.y - baseY;
+      const len = Math.max(1, Math.hypot(dx, dy));
+      const clamped = Math.min(baseR * 0.78, len);
+      const nx = dx / len;
+      const ny = dy / len;
+      knob.setPosition(baseX + nx * clamped, baseY + ny * clamped);
+      this.touch.joyX = nx * (clamped / (baseR * 0.78));
+      this.touch.joyY = ny * (clamped / (baseR * 0.78));
+      this.touch.left = this.touch.joyX < -0.2;
+      this.touch.right = this.touch.joyX > 0.2;
+      this.touch.up = this.touch.joyY < -0.2;
+      this.touch.down = this.touch.joyY > 0.2;
+    };
+
+    const resetJoy = () => {
+      knob.setPosition(baseX, baseY);
+      this.touch.joyX = 0;
+      this.touch.joyY = 0;
+      this.touch.left = this.touch.right = this.touch.up = this.touch.down = false;
+    };
+
+    base.on('pointerdown', updateJoy);
+    base.on('pointermove', (p) => { if (p.isDown) updateJoy(p); });
+    base.on('pointerup', resetJoy);
+    base.on('pointerout', resetJoy);
+
     const addBtn = (x, y, key, label) => {
-      const b = this.add.circle(x, y, size / 2, 0x0a2236, 0.5).setScrollFactor(0).setDepth(9999).setStrokeStyle(3, 0x88d4ff).setInteractive();
-      this.add.text(x, y, label, { fontFamily: 'monospace', fontSize: `${Math.floor(size * 0.42)}px`, color: '#bce9ff' }).setOrigin(0.5).setScrollFactor(0).setDepth(10000);
+      const b = this.add.circle(x, y, baseR * 0.56, 0x0a2236, 0.52).setScrollFactor(0).setDepth(9999).setStrokeStyle(3, 0x88d4ff).setInteractive();
+      this.add.text(x, y, label, { fontFamily: 'monospace', fontSize: `${Math.floor(baseR * 0.45)}px`, color: '#bce9ff' }).setOrigin(0.5).setScrollFactor(0).setDepth(10000);
       b.on('pointerdown', () => { this.touch[key] = true; });
       b.on('pointerup', () => { this.touch[key] = false; });
       b.on('pointerout', () => { this.touch[key] = false; });
     };
 
-    const baseY = GAME_HEIGHT - size * 1.1;
-    addBtn(size * 1.4, baseY, 'left', '◀');
-    addBtn(size * 2.6, baseY, 'right', '▶');
-    addBtn(size * 2.0, baseY - size * 1.0, 'up', '▲');
-    addBtn(size * 2.0, baseY + size * 0.9, 'down', '▼');
-
-    addBtn(GAME_WIDTH - size * 2.0, baseY - size * 0.5, 'interact', 'E');
-    addBtn(GAME_WIDTH - size * 0.9, baseY + size * 0.2, 'portal', 'SP');
+    addBtn(GAME_WIDTH - baseR * 1.8, GAME_HEIGHT - baseR * 1.4, 'interact', 'E');
+    addBtn(GAME_WIDTH - baseR * 0.75, GAME_HEIGHT - baseR * 0.78, 'portal', 'SP');
   }
 
   syncUI() {
@@ -85,7 +125,10 @@ export class OverworldScene extends Phaser.Scene {
     this.mapLayer = this.tileRenderer.render(this.map);
 
     if (!this.player) {
-      this.player = this.physics.add.sprite((spawnX ?? this.saveData.player.x / TILE_SIZE) * TILE_SIZE, (spawnY ?? this.saveData.player.y / TILE_SIZE) * TILE_SIZE, 'player').setSize(24, 36).setOffset(4, 0);
+      const bodyW = IS_MOBILE ? 30 : 24;
+      const bodyH = IS_MOBILE ? 44 : 36;
+      this.player = this.physics.add.sprite((spawnX ?? this.saveData.player.x / TILE_SIZE) * TILE_SIZE, (spawnY ?? this.saveData.player.y / TILE_SIZE) * TILE_SIZE, 'player').setSize(bodyW, bodyH).setOffset(2, 0);
+      this.player.setScale(IS_MOBILE ? 1.3 : 1.15);
       this.player.setCollideWorldBounds(true);
     } else {
       this.player.setPosition((spawnX ?? this.map.portals[0]?.x ?? 10) * TILE_SIZE, (spawnY ?? this.map.portals[0]?.y ?? 10) * TILE_SIZE);
@@ -99,6 +142,7 @@ export class OverworldScene extends Phaser.Scene {
 
     this.npcSystem = new NPCSystem(this, this.dialogSystem, this.questSystem);
     this.npcSystem.spawn(this.map.npcs || []);
+    this.npcSystem.npcs.forEach((n) => n.sprite.setScale(IS_MOBILE ? 1.35 : 1.2));
     this.npcSystem.setInteractives(this.map.interactives || []);
 
     this.saveData.map = mapId;
@@ -140,7 +184,7 @@ export class OverworldScene extends Phaser.Scene {
       return;
     }
 
-    const speed = 170;
+    const speed = IS_MOBILE ? 210 : 170;
     let vx = 0;
     let vy = 0;
     if (this.keys.left.isDown || this.touch.left) vx = -speed;
