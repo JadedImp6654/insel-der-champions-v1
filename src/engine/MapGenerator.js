@@ -17,14 +17,23 @@ function carveEllipse(layer, cx, cy, rx, ry, tile) {
   }
 }
 
-function path(layer, x0, y0, x1, y1, tile = 'path') {
+function paint(layer, x, y, tile, r = 1) {
+  for (let oy = -r; oy <= r; oy++) {
+    for (let ox = -r; ox <= r; ox++) {
+      if (Math.abs(ox) + Math.abs(oy) > r + 0.5) continue;
+      if (layer[y + oy]?.[x + ox] !== undefined) layer[y + oy][x + ox] = tile;
+    }
+  }
+}
+
+function path(layer, x0, y0, x1, y1, tile = 'path', width = 1) {
   let x = x0;
   let y = y0;
   while (x !== x1 || y !== y1) {
-    layer[y][x] = tile;
+    paint(layer, x, y, tile, width);
     if (x < x1) x++; else if (x > x1) x--;
     if (y < y1) y++; else if (y > y1) y--;
-    if (layer[y]) layer[y][x] = tile;
+    if (layer[y]) paint(layer, x, y, tile, width);
   }
 }
 
@@ -62,7 +71,7 @@ function decorateNature(map, seed = 8) {
         } else if (n > 0.89) {
           const id = 1 + Math.floor(n2 * 50);
           map.decor[y][x] = `flower_${id}`;
-        } else if (n > 0.72) {
+        } else if (n > 0.64) {
           const id = 1 + Math.floor(n2 * 120);
           map.decor[y][x] = `misc_${id}`;
           if (id % 4 === 0 || id % 7 === 0) map.collision[y][x] = 1;
@@ -96,11 +105,11 @@ function buildMainland() {
   carveEllipse(map.ground, 114, 72, 26, 18, 'grass_lush');
   carveEllipse(map.ground, 145, 56, 15, 12, 'grass_dark');
 
-  path(map.ground, 20, 55, 44, 49, 'path');
-  path(map.ground, 44, 49, 72, 43, 'path');
-  path(map.ground, 72, 43, 108, 41, 'path');
-  path(map.ground, 72, 43, 110, 72, 'path');
-  path(map.ground, 108, 41, 140, 56, 'path');
+  path(map.ground, 20, 55, 44, 49, 'path', 2);
+  path(map.ground, 44, 49, 72, 43, 'path', 2);
+  path(map.ground, 72, 43, 108, 41, 'path', 2);
+  path(map.ground, 72, 43, 110, 72, 'path', 2);
+  path(map.ground, 108, 41, 140, 56, 'path', 2);
 
   for (let y = 62; y < 76; y++) for (let x = 56; x < 78; x++) map.ground[y][x] = (x + y) % 2 ? 'field_crop' : 'field_soil';
 
@@ -141,6 +150,9 @@ function buildMainland() {
   map.minigameSpots.push({ x: 45, y: 56, minigame: 'run', label: 'Waldsprint' });
   map.minigameSpots.push({ x: 130, y: 66, minigame: 'dodge', label: 'Kometenfeld' });
   map.minigameSpots.push({ x: 96, y: 30, minigame: 'timing', label: 'Sonnenuhr' });
+  map.minigameSpots.push({ x: 54, y: 46, minigame: 'run', label: 'Dorfrennen' });
+  map.minigameSpots.push({ x: 116, y: 56, minigame: 'dodge', label: 'Wellensturm' });
+  map.minigameSpots.push({ x: 84, y: 34, minigame: 'timing', label: 'Glockenpfad' });
 
   applyShore(map);
   decorateNature(map, 27);
@@ -154,7 +166,7 @@ function buildTrialIsland(id) {
   carveEllipse(map.ground, 32, 34, 24, 20, 'grass_lush');
   carveEllipse(map.ground, 20, 24, 10, 8, 'grass_dark');
   carveEllipse(map.ground, 43, 22, 9, 8, 'grass_lush');
-  path(map.ground, 32, 48, 32, 30, 'path');
+  path(map.ground, 32, 48, 32, 30, 'path', 2);
 
   map.decor[30][32] = 'portal';
   map.decor[48][32] = 'portal';

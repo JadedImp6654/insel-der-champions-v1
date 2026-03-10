@@ -48,6 +48,7 @@ export class UISystem extends Phaser.Scene {
 
     this.input.keyboard.on('keydown-SPACE', () => this.advance());
     this.input.keyboard.on('keydown-ENTER', () => this.advance());
+    this.input.on('pointerdown', () => { if (this.lines.length) this.advance(); });
     this.input.keyboard.on('keydown-Q', () => this.toggleQuestLog());
     this.input.keyboard.on('keydown-M', () => this.toggleMap());
     this.input.keyboard.on('keydown-ESC', () => this.closeOverlays());

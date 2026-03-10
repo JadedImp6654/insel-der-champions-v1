@@ -62,10 +62,10 @@ export class OverworldScene extends Phaser.Scene {
   }
 
   setupTouchControls() {
-    this.touch = { up: false, down: false, left: false, right: false, interact: false, portal: false, joyX: 0, joyY: 0 };
+    this.touch = { up: false, down: false, left: false, right: false, interact: false, portal: false, map: false, joyX: 0, joyY: 0 };
     if (!this.sys.game.device.input.touch) return;
 
-    const baseR = Math.max(64, Math.floor(Math.min(GAME_WIDTH, GAME_HEIGHT) * 0.10));
+    const baseR = Math.max(74, Math.floor(Math.min(GAME_WIDTH, GAME_HEIGHT) * 0.12));
     const knobR = Math.floor(baseR * 0.44);
     const baseX = baseR + 26;
     const baseY = GAME_HEIGHT - baseR - 26;
@@ -109,6 +109,7 @@ export class OverworldScene extends Phaser.Scene {
       b.on('pointerout', () => { this.touch[key] = false; });
     };
 
+    addBtn(GAME_WIDTH - baseR * 2.8, GAME_HEIGHT - baseR * 1.0, 'map', 'M');
     addBtn(GAME_WIDTH - baseR * 1.8, GAME_HEIGHT - baseR * 1.4, 'interact', 'E');
     addBtn(GAME_WIDTH - baseR * 0.75, GAME_HEIGHT - baseR * 0.78, 'portal', 'SP');
   }
@@ -135,9 +136,13 @@ export class OverworldScene extends Phaser.Scene {
       const bodyH = IS_MOBILE ? 44 : 36;
       this.player = this.physics.add.sprite((spawnX ?? this.saveData.player.x / TILE_SIZE) * TILE_SIZE, (spawnY ?? this.saveData.player.y / TILE_SIZE) * TILE_SIZE, 'player').setSize(bodyW, bodyH).setOffset(2, 0);
       this.player.setScale(IS_MOBILE ? 1.3 : 1.15);
+      this.player.setDepth(500);
       this.player.setCollideWorldBounds(true);
     } else {
       this.player.setPosition((spawnX ?? this.map.portals[0]?.x ?? 10) * TILE_SIZE, (spawnY ?? this.map.portals[0]?.y ?? 10) * TILE_SIZE);
+      this.player.setDepth(500);
+      this.player.setVisible(true);
+      this.player.setActive(true);
     }
 
     this.physics.world.setBounds(0, 0, this.map.width * TILE_SIZE, this.map.height * TILE_SIZE);
@@ -148,7 +153,7 @@ export class OverworldScene extends Phaser.Scene {
 
     this.npcSystem = new NPCSystem(this, this.dialogSystem, this.questSystem);
     this.npcSystem.spawn(this.map.npcs || []);
-    this.npcSystem.npcs.forEach((n) => n.sprite.setScale(IS_MOBILE ? 1.35 : 1.2));
+    this.npcSystem.npcs.forEach((n) => { n.sprite.setScale(IS_MOBILE ? 1.35 : 1.2); n.sprite.setDepth(480); });
     this.npcSystem.setInteractives(this.map.interactives || []);
 
     this.saveData.map = mapId;
@@ -212,6 +217,10 @@ export class OverworldScene extends Phaser.Scene {
     if (Phaser.Input.Keyboard.JustDown(this.keys.portal) || this.touch.portal) {
       this.touch.portal = false;
       this.handlePortal();
+    }
+    if (this.touch.map) {
+      this.touch.map = false;
+      if (this.ui) this.ui.toggleMap();
     }
 
     this.saveData.player = { x: this.player.x, y: this.player.y };

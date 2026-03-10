@@ -14,44 +14,31 @@
         overflow: hidden;
         touch-action: none;
       }
-      body {
-        display: grid;
-        place-items: center;
+      body { display: grid; place-items: center; }
+      #game { width: 100vw; height: 100vh; image-rendering: pixelated; image-rendering: crisp-edges; }
+      #game canvas { width: 100% !important; height: 100% !important; }
+      #rotate-overlay, #install-overlay {
+        position: fixed; inset: 0; display: none; align-items: center; justify-content: center; text-align: center;
+        background: rgba(6, 14, 28, 0.94); color: #d9f3ff; font-family: monospace; z-index: 99999; padding: 24px;
       }
-      #game {
-        width: 100vw;
-        height: 100vh;
-        image-rendering: pixelated;
-        image-rendering: crisp-edges;
-      }
-      #game canvas {
-        width: 100% !important;
-        height: 100% !important;
-      }
-      #rotate-overlay {
-        position: fixed;
-        inset: 0;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        background: rgba(6, 14, 28, 0.94);
-        color: #d9f3ff;
-        font-family: monospace;
-        font-size: 22px;
-        z-index: 99999;
-        padding: 24px;
-      }
-      @media (orientation: portrait) {
-        #rotate-overlay.mobile-only {
-          display: flex;
-        }
-      }
+      #rotate-overlay { font-size: 22px; }
+      #install-overlay { font-size: 18px; }
+      #install-overlay .box { max-width: 720px; border: 2px solid #6db5ff; background: rgba(16,37,59,0.86); padding: 18px; border-radius: 10px; }
+      #install-overlay button { margin-top: 12px; background:#6db5ff; color:#06203a; border:0; padding:10px 16px; border-radius:8px; font-family:monospace; font-size:16px; }
+      @media (orientation: portrait) { #rotate-overlay.mobile-only { display: flex; } }
     </style>
   </head>
   <body>
     <div id="game"></div>
     <div id="rotate-overlay" class="mobile-only">Bitte Gerät ins Querformat drehen<br/>für ein optimales Spielerlebnis.</div>
+    <div id="install-overlay">
+      <div class="box">
+        <div><b>Für das beste Erlebnis: Zum Home-Bildschirm hinzufügen</b></div>
+        <div style="margin-top:8px">iPhone: Teilen-Symbol → „Zum Home-Bildschirm“</div>
+        <div>Android: Menü → „App installieren“</div>
+        <button id="install-dismiss">Verstanden</button>
+      </div>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
     <script type="module" src="./src/main.js"></script>
   </body>
