@@ -1,0 +1,230 @@
+import { TILE_SIZE, GAME_WIDTH, GAME_HEIGHT, IS_MOBILE } from '../config.js';
+import { MapGenerator } from '../engine/MapGenerator.js';
+import { TileRenderer } from '../engine/TileRenderer.js';
+import { SaveSystem } from '../engine/SaveSystem.js';
+import { QuestSystem } from '../engine/QuestSystem.js';
+import { DialogSystem } from '../engine/DialogSystem.js';
+import { NPCSystem } from '../engine/NPCSystem.js';
+
+export class OverworldScene extends Phaser.Scene {
+  constructor() {
+    super('OverworldScene');
+  }
+
+  init(data) {
+    this.returnData = data || {};
+  }
+
+  create() {
+    this.saveData = SaveSystem.load();
+    if (this.returnData.minigame) {
+      this.saveData.minigames[this.returnData.minigame] = this.saveData.minigames[this.returnData.minigame] || !!this.returnData.win;
+      if (this.returnData.win) {
+        if (!this.saveData.minigameWins) this.saveData.minigameWins = { run: 0, dodge: 0, timing: 0 };
+        this.saveData.minigameWins[this.returnData.minigame] = (this.saveData.minigameWins[this.returnData.minigame] || 0) + 1;
+      }
+    }
+
+    this.maps = MapGenerator.getMaps();
+    this.questSystem = new QuestSystem(this.saveData);
+    this.questSystem.progressAfterMinigame();
+    this.dialogSystem = new DialogSystem(this);
+
+    this.currentMapId = this.returnData.map || this.saveData.map || 'mainland';
+    this.loadMap(this.currentMapId, this.returnData.x, this.returnData.y);
+
+    if (!this.scene.isActive('UISystem')) this.scene.launch('UISystem');
+    this.time.delayedCall(0, () => {
+      this.ui = this.scene.get('UISystem');
+      this.ui.bind(this);
+      this.syncUI();
+    });
+
+    this.keys = this.input.keyboard.addKeys({ up: 'W', down: 'S', left: 'A', right: 'D', interact: 'E', portal: 'SPACE' });
+    this.setupTouchControls();
+    this.setupFullscreenAuto();
+
+    this.events.on('dialog:end', () => {
+      this.player.body.moves = true;
+      this.syncUI();
+      SaveSystem.save(this.saveData);
+    });
+  }
+
+  setupFullscreenAuto() {
+    const req = () => {
+      if (document.fullscreenElement) return;
+      const el = document.documentElement;
+      if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+    };
+    req();
+    this.input.once('pointerdown', req);
+  }
+
+  setupTouchControls() {
+    this.touch = { up: false, down: false, left: false, right: false, interact: false, portal: false, map: false, joyX: 0, joyY: 0 };
+    if (!this.sys.game.device.input.touch) return;
+
+    const baseR = Math.max(74, Math.floor(Math.min(GAME_WIDTH, GAME_HEIGHT) * 0.12));
+    const knobR = Math.floor(baseR * 0.44);
+    const baseX = baseR + 26;
+    const baseY = GAME_HEIGHT - baseR - 26;
+
+    const base = this.add.circle(baseX, baseY, baseR, 0x0a2236, 0.38).setScrollFactor(0).setDepth(9999).setStrokeStyle(3, 0x88d4ff).setInteractive();
+    const knob = this.add.circle(baseX, baseY, knobR, 0x5fb7ff, 0.68).setScrollFactor(0).setDepth(10000);
+
+    const updateJoy = (pointer) => {
+      const dx = pointer.x - baseX;
+      const dy = pointer.y - baseY;
+      const len = Math.max(1, Math.hypot(dx, dy));
+      const clamped = Math.min(baseR * 0.78, len);
+      const nx = dx / len;
+      const ny = dy / len;
+      knob.setPosition(baseX + nx * clamped, baseY + ny * clamped);
+      this.touch.joyX = nx * (clamped / (baseR * 0.78));
+      this.touch.joyY = ny * (clamped / (baseR * 0.78));
+      this.touch.left = this.touch.joyX < -0.2;
+      this.touch.right = this.touch.joyX > 0.2;
+      this.touch.up = this.touch.joyY < -0.2;
+      this.touch.down = this.touch.joyY > 0.2;
+    };
+
+    const resetJoy = () => {
+      knob.setPosition(baseX, baseY);
+      this.touch.joyX = 0;
+      this.touch.joyY = 0;
+      this.touch.left = this.touch.right = this.touch.up = this.touch.down = false;
+    };
+
+    base.on('pointerdown', updateJoy);
+    base.on('pointermove', (p) => { if (p.isDown) updateJoy(p); });
+    base.on('pointerup', resetJoy);
+    base.on('pointerout', resetJoy);
+
+    const addBtn = (x, y, key, label) => {
+      const b = this.add.circle(x, y, baseR * 0.56, 0x0a2236, 0.52).setScrollFactor(0).setDepth(9999).setStrokeStyle(3, 0x88d4ff).setInteractive();
+      this.add.text(x, y, label, { fontFamily: 'monospace', fontSize: `${Math.floor(baseR * 0.45)}px`, color: '#bce9ff' }).setOrigin(0.5).setScrollFactor(0).setDepth(10000);
+      b.on('pointerdown', () => { this.touch[key] = true; });
+      b.on('pointerup', () => { this.touch[key] = false; });
+      b.on('pointerout', () => { this.touch[key] = false; });
+    };
+
+    addBtn(GAME_WIDTH - baseR * 2.8, GAME_HEIGHT - baseR * 1.0, 'map', 'M');
+    addBtn(GAME_WIDTH - baseR * 1.8, GAME_HEIGHT - baseR * 1.4, 'interact', 'E');
+    addBtn(GAME_WIDTH - baseR * 0.75, GAME_HEIGHT - baseR * 0.78, 'portal', 'SP');
+  }
+
+  syncUI() {
+    if (!this.ui) return;
+    this.ui.setQuest(this.questSystem.getActiveText());
+    this.ui.setQuestLog(this.questSystem.getQuestLogText());
+    this.ui.setMapData(this.map, this.player.x, this.player.y);
+  }
+
+  loadMap(mapId, spawnX, spawnY) {
+    if (this.mapLayer) this.mapLayer.destroy(true);
+    if (this.tileRenderer) this.tileRenderer.colliders.clear(true, true);
+    if (this.npcSystem?.npcs) this.npcSystem.npcs.forEach((n) => n.sprite.destroy());
+
+    this.map = this.maps[mapId];
+    this.currentMapId = mapId;
+    this.tileRenderer = new TileRenderer(this);
+    this.mapLayer = this.tileRenderer.render(this.map);
+
+    if (!this.player) {
+      const bodyW = IS_MOBILE ? 30 : 24;
+      const bodyH = IS_MOBILE ? 44 : 36;
+      this.player = this.physics.add.sprite((spawnX ?? this.saveData.player.x / TILE_SIZE) * TILE_SIZE, (spawnY ?? this.saveData.player.y / TILE_SIZE) * TILE_SIZE, 'player').setSize(bodyW, bodyH).setOffset(2, 0);
+      this.player.setScale(IS_MOBILE ? 1.3 : 1.15);
+      this.player.setDepth(500);
+      this.player.setCollideWorldBounds(true);
+    } else {
+      this.player.setPosition((spawnX ?? this.map.portals[0]?.x ?? 10) * TILE_SIZE, (spawnY ?? this.map.portals[0]?.y ?? 10) * TILE_SIZE);
+      this.player.setDepth(500);
+      this.player.setVisible(true);
+      this.player.setActive(true);
+    }
+
+    this.physics.world.setBounds(0, 0, this.map.width * TILE_SIZE, this.map.height * TILE_SIZE);
+    this.cameras.main.setBounds(0, 0, this.map.width * TILE_SIZE, this.map.height * TILE_SIZE);
+    this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
+
+    this.physics.add.collider(this.player, this.tileRenderer.colliders);
+
+    this.npcSystem = new NPCSystem(this, this.dialogSystem, this.questSystem);
+    this.npcSystem.spawn(this.map.npcs || []);
+    this.npcSystem.npcs.forEach((n) => { n.sprite.setScale(IS_MOBILE ? 1.35 : 1.2); n.sprite.setDepth(480); });
+    this.npcSystem.setInteractives(this.map.interactives || []);
+
+    this.saveData.map = mapId;
+    this.syncUI();
+  }
+
+  startMinigame(name) {
+    this.saveData.player = { x: this.player.x, y: this.player.y };
+    SaveSystem.save(this.saveData);
+    const sceneName = { run: 'MinigameRunScene', dodge: 'MinigameDodgeScene', timing: 'MinigameTimingScene' }[name];
+    this.scene.start(sceneName, { returnMap: this.currentMapId });
+  }
+
+  tryStartLocationMinigame() {
+    const tx = Math.round(this.player.x / TILE_SIZE);
+    const ty = Math.round(this.player.y / TILE_SIZE);
+    const s = (this.map.minigameSpots || []).find((m) => Math.abs(m.x - tx) <= 1 && Math.abs(m.y - ty) <= 1);
+    if (!s) return false;
+    this.startMinigame(s.minigame);
+    return true;
+  }
+
+  handlePortal() {
+    const tileX = Math.round(this.player.x / TILE_SIZE);
+    const tileY = Math.round(this.player.y / TILE_SIZE);
+    const portal = this.map.portals.find((p) => Math.abs(p.x - tileX) <= 1 && Math.abs(p.y - tileY) <= 1);
+    if (!portal) return;
+
+    if (portal.targetMap) {
+      this.loadMap(portal.targetMap, portal.tx, portal.ty);
+      return;
+    }
+    if (portal.targetMinigame) this.startMinigame(portal.targetMinigame);
+  }
+
+  update() {
+    if (!this.player || this.dialogSystem.active) {
+      if (this.player) this.player.setVelocity(0, 0);
+      return;
+    }
+
+    const speed = IS_MOBILE ? 210 : 170;
+    let vx = 0;
+    let vy = 0;
+    if (this.keys.left.isDown || this.touch.left) vx = -speed;
+    else if (this.keys.right.isDown || this.touch.right) vx = speed;
+    if (this.keys.up.isDown || this.touch.up) vy = -speed;
+    else if (this.keys.down.isDown || this.touch.down) vy = speed;
+    this.player.setVelocity(vx, vy);
+
+    if (Phaser.Input.Keyboard.JustDown(this.keys.interact) || this.touch.interact) {
+      this.touch.interact = false;
+      if (!this.tryStartLocationMinigame()) {
+        if (this.npcSystem.interactNearest(this.player)) {
+          this.player.body.moves = false;
+          this.syncUI();
+        }
+      }
+    }
+
+    if (Phaser.Input.Keyboard.JustDown(this.keys.portal) || this.touch.portal) {
+      this.touch.portal = false;
+      this.handlePortal();
+    }
+    if (this.touch.map) {
+      this.touch.map = false;
+      if (this.ui) this.ui.toggleMap();
+    }
+
+    this.saveData.player = { x: this.player.x, y: this.player.y };
+    SaveSystem.save(this.saveData);
+    if (this.ui?.mapOpen) this.ui.setMapData(this.map, this.player.x, this.player.y);
+  }
+}
